@@ -125,6 +125,10 @@ func (d *Decoder) decodeName() (name string, err error) {
 		return
 	}
 
+	if length == 0 {
+		return "", nil
+	}
+
 	raw := make([]byte, length)
 	_, err = d.r.Read(raw)
 	if err != nil {
