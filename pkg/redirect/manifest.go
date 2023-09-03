@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 
@@ -62,6 +63,11 @@ func (b *ManifestBuilder) Build() (*Manifest, error) {
 	}
 
 	b.spawnWorkers()
+
+	// Sort packages
+	sort.Slice(b.packages, func(i, j int) bool {
+		return b.packages[i].Name < b.packages[j].Name
+	})
 
 	return &Manifest{
 		Version:  "1",

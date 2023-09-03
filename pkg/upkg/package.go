@@ -1,6 +1,7 @@
 package upkg
 
 import (
+	"sort"
 	"strings"
 )
 
@@ -43,6 +44,8 @@ func (p *Package) PackageDependencies() []string {
 	for k := range deps {
 		depsSlice = append(depsSlice, k)
 	}
+
+	sort.Strings(depsSlice)
 
 	return depsSlice
 }
