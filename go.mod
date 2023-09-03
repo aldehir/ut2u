@@ -1,4 +1,4 @@
-module github.com/aldehir/ut2
+module github.com/aldehir/ut2u
 
 go 1.20
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/aldehir/ut2/cmd"
+	"github.com/aldehir/ut2u/cmd"
 )
 
 func main() {
