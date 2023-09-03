@@ -1,6 +1,7 @@
 package upkg
 
 import (
+	"bytes"
 	"os"
 	"testing"
 )
@@ -28,6 +29,15 @@ func TestDecoder(t *testing.T) {
 		if !inStringSlice(t, deps, want) {
 			t.Errorf("expected to find %s in dependencies: %s", want, deps)
 		}
+	}
+
+	gotGUID := pkg.GUID()
+
+	// 017b d58b 654e ee4c bef5 ae23 89ce 6d1c
+	wantGUID := []byte{0x8b, 0xd5, 0x7b, 0x01, 0x4c, 0xee, 0x4e, 0x65, 0x23, 0xae, 0xf5, 0xbe, 0x1c, 0x6d, 0xce, 0x89}
+
+	if !bytes.Equal(wantGUID, gotGUID) {
+		t.Errorf("GUID mismatch, want: %v, got: %v", wantGUID, gotGUID)
 	}
 
 }
