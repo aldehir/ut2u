@@ -75,6 +75,8 @@ func (b *ManifestBuilder) spawnWorkers() {
 		concurrency = runtime.NumCPU()
 	}
 
+	fmt.Fprintf(os.Stderr, "Running %d concurrent jobs\n", concurrency)
+
 	b.sem = make(chan struct{}, concurrency)
 	defer close(b.sem)
 
@@ -93,18 +95,18 @@ func (b *ManifestBuilder) spawnWorkers() {
 }
 
 func (b *ManifestBuilder) processFile(file string) {
-	fmt.Printf("Processing: %s\n", file)
+	fmt.Fprintf(os.Stderr, "Processing: %s\n", file)
 
 	f, err := os.Open(file)
 	if err != nil {
-		fmt.Printf("Warn: failed to open %s, %s\n", file, err)
+		fmt.Fprintf(os.Stderr, "Warn: failed to open %s, %s\n", file, err)
 	}
 	defer f.Close()
 
 	decoder := upkg.NewDecoder(f)
 	pkg, err := decoder.Decode()
 	if err != nil {
-		fmt.Printf("Warn: failed to decode package %s, %s\n", file, err)
+		fmt.Fprintf(os.Stderr, "Warn: failed to decode package %s, %s\n", file, err)
 		return
 	}
 
@@ -119,7 +121,7 @@ func (b *ManifestBuilder) processFile(file string) {
 
 	_, err = io.Copy(hash, f)
 	if err != nil {
-		fmt.Printf("Warn: failed to compute checksums for %s, %s\n", file, err)
+		fmt.Fprintf(os.Stderr, "Warn: failed to compute checksums for %s, %s\n", file, err)
 		return
 	}
 
