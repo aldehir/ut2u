@@ -76,6 +76,7 @@ func (b *ManifestBuilder) spawnWorkers() {
 	}
 
 	b.sem = make(chan struct{}, concurrency)
+	defer close(b.sem)
 
 	for _, file := range b.files {
 		b.wg.Add(1)
