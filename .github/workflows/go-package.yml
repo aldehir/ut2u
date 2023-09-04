@@ -25,3 +25,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ut2u-linux-amd64
+            ut2u.exe
