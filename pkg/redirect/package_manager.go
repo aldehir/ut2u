@@ -2,6 +2,7 @@ package redirect
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -39,28 +40,27 @@ func (b *PackageManager) Upload(ctx context.Context, pkg PackageMeta) error {
 	}
 	defer f.Close()
 
-	compressedFile, err := os.CreateTemp("", "uz2-*")
-	if err != nil {
-		return err
-	}
+	ctx, cancel := context.WithCancelCause(ctx)
 
-	defer func() {
-		compressedFile.Close()
-		os.Remove(compressedFile.Name())
+	// Create a pipe, writing the compressed object for the upload function to
+	// read from the reader
+	r, w := io.Pipe()
+
+	go func() {
+		compressor := uz2.NewWriter(w)
+		_, err = io.Copy(compressor, f)
+		if err != nil {
+			cancel(err)
+			return
+		}
+
+		err = compressor.Close()
+		if err != nil {
+			cancel(err)
+		}
+
+		w.Close()
 	}()
-
-	compressor := uz2.NewWriter(compressedFile)
-	_, err = io.Copy(compressor, f)
-	if err != nil {
-		return err
-	}
-
-	err = compressor.Close()
-	if err != nil {
-		return err
-	}
-
-	compressedFile.Seek(0, io.SeekStart)
 
 	key := b.packageKey(pkg)
 
@@ -72,10 +72,12 @@ func (b *PackageManager) Upload(ctx context.Context, pkg PackageMeta) error {
 		Bucket:   &b.Bucket,
 		Key:      &key,
 		Metadata: s3Metadata(pkg),
-		Body:     compressedFile,
+		Body:     r,
 	})
 
-	if err != nil {
+	if errors.Is(err, context.Canceled) {
+		return ctx.Err()
+	} else if err != nil {
 		return err
 	}
 
