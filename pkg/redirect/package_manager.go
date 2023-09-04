@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/aldehir/ut2u/pkg/uz2"
 )
@@ -42,27 +43,28 @@ func (b *PackageManager) Upload(ctx context.Context, pkg PackageMeta) error {
 	}
 	defer f.Close()
 
-	ctx, cancel := context.WithCancelCause(ctx)
+	g, ctx := errgroup.WithContext(ctx)
 
 	// Create a pipe, writing the compressed object for the upload function to
 	// read from the reader
 	r, w := io.Pipe()
 
-	go func() {
+	g.Go(func() error {
 		compressor := uz2.NewWriter(w)
+		defer w.Close()
+
 		_, err = io.Copy(compressor, f)
 		if err != nil {
-			cancel(err)
-			return
+			return err
 		}
 
 		err = compressor.Close()
 		if err != nil {
-			cancel(err)
+			return err
 		}
 
-		w.Close()
-	}()
+		return nil
+	})
 
 	key := b.packageKey(pkg)
 
@@ -77,13 +79,12 @@ func (b *PackageManager) Upload(ctx context.Context, pkg PackageMeta) error {
 		Body:     r,
 	})
 
-	if errors.Is(err, context.Canceled) {
-		return ctx.Err()
-	} else if err != nil {
-		return err
+	if err != nil {
+		r.Close() // Close the reader so our goroutine finds a way out
 	}
 
-	return nil
+	g.Wait()
+	return err
 }
 
 // GetPackageGUIDs returns all package GUIDs on the redirect server.
