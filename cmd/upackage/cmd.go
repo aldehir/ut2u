@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/aldehir/ut2u/cmd/common"
+	"github.com/aldehir/ut2u/pkg/redirect"
 )
 
 var pkgCmd = &cobra.Command{
@@ -25,6 +26,8 @@ func init() {
 
 	pkgCmd.AddCommand(requiresCmd)
 	common.InitManifestArgs(requiresCmd)
+
+	pkgCmd.AddCommand(infoCmd)
 }
 
 func EnrichCommand(cmd *cobra.Command) {
@@ -108,4 +111,49 @@ func doRequires(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+var infoCmd = &cobra.Command{
+	Use:   "info package...",
+	Short: "Print package information",
+	Args:  cobra.MinimumNArgs(1),
+	RunE:  doInfo,
+
+	DisableFlagsInUseLine: true,
+}
+
+func doInfo(cmd *cobra.Command, args []string) error {
+	for i, p := range args {
+		if i > 0 {
+			fmt.Fprintln(os.Stdout)
+		}
+
+		printPackageInfo(p)
+	}
+
+	return nil
+}
+
+func printPackageInfo(path string) {
+	info, err := redirect.ReadPackageMeta(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading %s: %s", path, err)
+		return
+	}
+
+	fmt.Fprintf(os.Stdout, "Name:     %s\n", info.Name)
+	fmt.Fprintf(os.Stdout, "GUID:     %s\n", info.GUID)
+	fmt.Fprintf(os.Stdout, "Provides: %s\n", info.Provides)
+
+	if len(info.Requires) > 0 {
+		fmt.Fprintf(os.Stdout, "Requires:\n")
+		for _, req := range info.Requires {
+			fmt.Fprintf(os.Stdout, "  - %s\n", req)
+		}
+	}
+
+	fmt.Fprintf(os.Stdout, "Checksums: \n")
+	fmt.Fprintf(os.Stdout, "  MD5:    %s\n", info.Checksums.MD5)
+	fmt.Fprintf(os.Stdout, "  SHA1:   %s\n", info.Checksums.SHA1)
+	fmt.Fprintf(os.Stdout, "  SHA256: %s\n", info.Checksums.SHA256)
 }
