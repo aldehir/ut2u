@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 
 	"github.com/aldehir/ut2u/pkg/uz2"
 )
@@ -33,6 +34,7 @@ func NewPackageManager(client *s3.Client, bucket string, prefix string) *Package
 	}
 }
 
+// Upload compresses a package and uploads it to bucket/prefix/<name>/<guid>.uz2
 func (b *PackageManager) Upload(ctx context.Context, pkg PackageMeta) error {
 	f, err := os.Open(pkg.Path)
 	if err != nil {
@@ -82,6 +84,35 @@ func (b *PackageManager) Upload(ctx context.Context, pkg PackageMeta) error {
 	}
 
 	return nil
+}
+
+// Exists returns true if the given package is already on the redirect server.
+func (p *PackageManager) Exists(ctx context.Context, pkg PackageMeta) (bool, error) {
+	key := p.packageKey(pkg)
+
+	output, err := p.s3Client.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: &p.Bucket,
+		Key:    &key,
+	})
+
+	var nsk *types.NoSuchKey
+	if errors.As(err, &nsk) {
+		return false, nil
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	// If it does exist, then compare the checksums and see if we need to upload it
+	metadata := output.Metadata
+	if otherSum, ok := metadata["uncompressed-checksum-sha256"]; ok {
+		if !strings.EqualFold(otherSum, pkg.Checksums.SHA256) {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 func (b *PackageManager) packageKey(pkg PackageMeta) string {

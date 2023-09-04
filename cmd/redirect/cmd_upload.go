@@ -5,29 +5,24 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/spf13/cobra"
 
 	"github.com/aldehir/ut2u/pkg/redirect"
 )
 
 var uploadCmd = &cobra.Command{
-	Use:     "upload",
+	Use:     "upload [-b bucket] [-p prefix] packages...",
 	Short:   "Upload a package to an S3 bucket",
 	Args:    cobra.MinimumNArgs(1),
 	PreRunE: withPackageManager,
 	RunE:    doUpload,
-}
 
-var packageManager *redirect.PackageManager
-var bucket string
-var prefix string
+	DisableFlagsInUseLine: true,
+}
 
 func init() {
 	redirectCmd.AddCommand(uploadCmd)
-	uploadCmd.Flags().StringVarP(&bucket, "bucket", "b", "", "bucket to upload files")
-	uploadCmd.Flags().StringVarP(&prefix, "prefix", "p", "", "key prefix")
+	initPackageManagerArgs(uploadCmd)
 }
 
 func doUpload(cmd *cobra.Command, args []string) error {
@@ -46,16 +41,5 @@ func doUpload(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "Uploaded!\n")
 	}
 
-	return nil
-}
-
-func withPackageManager(cmd *cobra.Command, args []string) error {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		return err
-	}
-
-	s3Client := s3.NewFromConfig(cfg)
-	packageManager = redirect.NewPackageManager(s3Client, bucket, prefix)
 	return nil
 }
