@@ -143,8 +143,6 @@ func (b *ManifestBuilder) spawnWorkers() {
 }
 
 func (b *ManifestBuilder) processFile(file string) {
-	fmt.Fprintf(os.Stderr, "Processing: %s\n", file)
-
 	pkgMeta, err := ReadPackageMeta(file)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
