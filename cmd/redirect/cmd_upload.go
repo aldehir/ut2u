@@ -12,7 +12,7 @@ import (
 
 var uploadCmd = &cobra.Command{
 	Use:     "upload [-b bucket] [-p prefix] packages...",
-	Short:   "Upload a package to an S3 bucket",
+	Short:   "Upload package to an S3 bucket",
 	Args:    cobra.MinimumNArgs(1),
 	PreRunE: withPackageManager,
 	RunE:    doUpload,

@@ -11,7 +11,7 @@ import (
 
 var manifestCmd = &cobra.Command{
 	Use:   "manifest [-s system-dir] ut2004-ini",
-	Short: "Generate a manifest of your UT2 packages",
+	Short: "Generate a manifest of packages",
 	Args:  cobra.ExactArgs(1),
 	RunE:  doManifest,
 
