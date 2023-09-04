@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/aldehir/ut2u/cmd/redirect"
+	"github.com/aldehir/ut2u/cmd/upackage"
 )
 
 var rootCmd = &cobra.Command{
@@ -16,6 +17,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	redirect.EnrichCommand(rootCmd)
+	upackage.EnrichCommand(rootCmd)
 }
 
 func Execute() error {
