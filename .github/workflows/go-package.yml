@@ -17,10 +17,11 @@ jobs:
         run: go test -v ./...
 
       - name: Build for Linux
-        run: CGO_ENABLED=0 GOOS=linux go build .
+        run: CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o ut2u-linux-amd64 .
 
       - name: Build for Windows
-        run: CGO_ENABLED=0 GOOS=windows go build .
+        run: CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -o ut2u.exe .
 
-      - name: Build for MacOS
-        run: CGO_ENABLED=0 GOOS=darwin go build .
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
