@@ -86,6 +86,38 @@ func (b *PackageManager) Upload(ctx context.Context, pkg PackageMeta) error {
 	return nil
 }
 
+// GetPackageGUIDs returns all package GUIDs on the redirect server.
+func (p *PackageManager) GetPackageGUIDs(ctx context.Context) ([]string, error) {
+	prefix := p.Prefix
+	if !strings.HasSuffix(prefix, "/") {
+		prefix = prefix + "/"
+	}
+
+	paginator := s3.NewListObjectsV2Paginator(p.s3Client, &s3.ListObjectsV2Input{
+		Bucket: &p.Bucket,
+		Prefix: &prefix,
+	})
+
+	result := make([]string, 0, 20)
+
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, obj := range output.Contents {
+			key := strings.TrimPrefix(*obj.Key, prefix)
+			_, filename := filepath.Split(key)
+			guid := strings.TrimSuffix(filename, filepath.Ext(filename))
+
+			result = append(result, guid)
+		}
+	}
+
+	return result, nil
+}
+
 // Exists returns true if the given package is already on the redirect server.
 func (p *PackageManager) Exists(ctx context.Context, pkg PackageMeta) (bool, error) {
 	key := p.packageKey(pkg)

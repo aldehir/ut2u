@@ -2,6 +2,8 @@ package redirect
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -33,6 +35,8 @@ func doSync(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Fprintf(os.Stderr, "Found %d packages\n", len(manifest.Packages))
 
 	uploader := redirect.NewManifestUploader(packageManager, func(u *redirect.ManifestUploader) {
 		u.Concurrency = concurrentUploads

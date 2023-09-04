@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -40,6 +41,17 @@ func (u *ManifestUploader) Upload(ctx context.Context, manifest *Manifest) error
 		concurrency = DefaultManifestUploaderConcurrency
 	}
 
+	// Build a map of GUIDs that exist on the server
+	guids, err := u.pm.GetPackageGUIDs(ctx)
+	if err != nil {
+		return err
+	}
+
+	guidSet := make(map[string]struct{}, len(guids))
+	for _, guid := range guids {
+		guidSet[strings.ToUpper(guid)] = struct{}{}
+	}
+
 	sem := make(chan struct{}, concurrency)
 
 	for _, pkg := range manifest.Packages {
@@ -51,11 +63,7 @@ func (u *ManifestUploader) Upload(ctx context.Context, manifest *Manifest) error
 				<-sem
 			}()
 
-			exists, err := u.pm.Exists(ctx, pkg)
-			if err != nil {
-				return err
-			}
-
+			_, exists := guidSet[strings.ToUpper(pkg.GUID)]
 			if exists {
 				return nil
 			}
