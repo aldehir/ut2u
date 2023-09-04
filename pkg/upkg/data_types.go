@@ -1,18 +1,17 @@
 package upkg
 
 type header struct {
-	Magic           uint32
-	Version         uint16
-	Licensee        uint16
-	PackageFlags    uint32
-	NameCount       uint32
-	NameOffset      uint32
-	ExportCount     uint32
-	ExportOffset    uint32
-	ImportCount     uint32
-	ImportOffset    uint32
-	GUID            [16]byte
-	GenerationCount uint32
+	Magic        uint32
+	Version      uint16
+	Licensee     uint16
+	PackageFlags uint32
+	NameCount    uint32
+	NameOffset   uint32
+	ExportCount  uint32
+	ExportOffset uint32
+	ImportCount  uint32
+	ImportOffset uint32
+	GUID         [16]byte
 }
 
 type generation struct {

@@ -40,14 +40,23 @@ func (d *Decoder) readHeader() (err error) {
 		return
 	}
 
-	var gen generation
-	for i := 0; i < int(d.pkg.h.GenerationCount); i++ {
-		err = binary.Read(d.r, binary.LittleEndian, &gen)
+	if d.pkg.h.Version >= 68 {
+		var genCount uint32
+
+		err = binary.Read(d.r, binary.LittleEndian, &genCount)
 		if err != nil {
 			return
 		}
 
-		d.pkg.gen = append(d.pkg.gen, gen)
+		var gen generation
+		for i := 0; i < int(genCount); i++ {
+			err = binary.Read(d.r, binary.LittleEndian, &gen)
+			if err != nil {
+				return
+			}
+
+			d.pkg.gen = append(d.pkg.gen, gen)
+		}
 	}
 
 	return nil
