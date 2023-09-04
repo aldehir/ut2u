@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/aldehir/ut2u/cmd/common"
 )
 
 var manifestCmd = &cobra.Command{
@@ -18,11 +20,11 @@ var manifestCmd = &cobra.Command{
 
 func init() {
 	redirectCmd.AddCommand(manifestCmd)
-	initManifestArgs(manifestCmd)
+	common.InitManifestArgs(manifestCmd)
 }
 
 func doManifest(cmd *cobra.Command, args []string) error {
-	manifest, err := buildManifest(args[0])
+	manifest, err := common.BuildManifest(args[0])
 	if err != nil {
 		return err
 	}

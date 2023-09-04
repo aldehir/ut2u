@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/aldehir/ut2u/cmd/common"
 	"github.com/aldehir/ut2u/pkg/redirect"
 )
 
@@ -25,13 +26,13 @@ var concurrentUploads int
 func init() {
 	redirectCmd.AddCommand(syncCmd)
 	initPackageManagerArgs(syncCmd)
-	initManifestArgs(syncCmd)
+	common.InitManifestArgs(syncCmd)
 
 	syncCmd.Flags().IntVarP(&concurrentUploads, "upload-jobs", "u", 0, "number of concurrent uploads")
 }
 
 func doSync(cmd *cobra.Command, args []string) error {
-	manifest, err := buildManifest(args[0])
+	manifest, err := common.BuildManifest(args[0])
 	if err != nil {
 		return err
 	}
