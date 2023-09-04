@@ -123,8 +123,6 @@ func (b *ManifestBuilder) spawnWorkers() {
 		concurrency = runtime.NumCPU()
 	}
 
-	fmt.Fprintf(os.Stderr, "Running %d concurrent jobs\n", concurrency)
-
 	b.sem = make(chan struct{}, concurrency)
 	defer close(b.sem)
 
