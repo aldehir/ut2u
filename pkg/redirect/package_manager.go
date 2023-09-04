@@ -85,7 +85,7 @@ func (b *PackageManager) Upload(ctx context.Context, pkg PackageMeta) error {
 }
 
 func (b *PackageManager) packageKey(pkg PackageMeta) string {
-	return filepath.Join(b.Prefix, pkg.Name, pkg.GUID)
+	return filepath.Join(b.Prefix, pkg.Name, pkg.GUID+".uz2")
 }
 
 // Encode the package meta to a map for storing in S3
