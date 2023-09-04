@@ -95,7 +95,7 @@ func (p *PackageManager) Exists(ctx context.Context, pkg PackageMeta) (bool, err
 		Key:    &key,
 	})
 
-	var nsk *types.NoSuchKey
+	var nsk *types.NotFound
 	if errors.As(err, &nsk) {
 		return false, nil
 	}
