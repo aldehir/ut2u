@@ -36,8 +36,11 @@ pattern:
 
 ```
 [IpDrv.HTTPDownload]
-RedirectToURL=http://redirect.example.com/%file%/%guid%.uz2
+RedirectToURL=http://redirect.example.com/%file%/%guid%
 ```
+
+NOTE: The `%file%` substitution will automatically append `.uz2` to the package
+name if compression is enabled on the server. Learned this the hard way.
 
 
 ### Upload
