@@ -2,6 +2,7 @@ package upackage
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/aldehir/ut2u/cmd/common"
 	"github.com/aldehir/ut2u/pkg/redirect"
+	"github.com/aldehir/ut2u/pkg/uz2"
 )
 
 var pkgCmd = &cobra.Command{
@@ -28,6 +30,8 @@ func init() {
 	common.InitManifestArgs(requiresCmd)
 
 	pkgCmd.AddCommand(infoCmd)
+	pkgCmd.AddCommand(compressCmd)
+	pkgCmd.AddCommand(decompressCmd)
 }
 
 func EnrichCommand(cmd *cobra.Command) {
@@ -156,4 +160,105 @@ func printPackageInfo(path string) {
 	fmt.Fprintf(os.Stdout, "  MD5:    %s\n", info.Checksums.MD5)
 	fmt.Fprintf(os.Stdout, "  SHA1:   %s\n", info.Checksums.SHA1)
 	fmt.Fprintf(os.Stdout, "  SHA256: %s\n", info.Checksums.SHA256)
+}
+
+var compressCmd = &cobra.Command{
+	Use:   "compress package",
+	Short: "Compress package",
+	Args:  cobra.ExactArgs(1),
+	RunE:  doCompress,
+
+	DisableFlagsInUseLine: true,
+}
+
+func doCompress(cmd *cobra.Command, args []string) error {
+	p := args[0]
+
+	result, err := compressPackage(p)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error compressing %s: %s\n", p, err)
+		os.Exit(1)
+	}
+
+	fmt.Fprintf(os.Stdout, "%s -> %s\n", p, result)
+	return nil
+}
+
+var decompressCmd = &cobra.Command{
+	Use:   "decompress package",
+	Short: "Decompress package",
+	Args:  cobra.ExactArgs(1),
+	RunE:  doDecompress,
+
+	DisableFlagsInUseLine: true,
+}
+
+func doDecompress(cmd *cobra.Command, args []string) error {
+	p := args[0]
+
+	result, err := decompressPackage(p)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error decompressing %s: %s\n", p, err)
+		os.Exit(1)
+	}
+
+	fmt.Fprintf(os.Stdout, "%s -> %s\n", p, result)
+	return nil
+}
+
+func compressPackage(path string) (string, error) {
+	result := path + ".uz2"
+
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	out, err := os.Create(result)
+	if err != nil {
+		return "", err
+	}
+	defer out.Close()
+
+	w := uz2.NewWriter(out)
+	_, err = io.Copy(w, f)
+	if err != nil {
+		return "", err
+	}
+
+	err = w.Close()
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
+}
+
+func decompressPackage(path string) (string, error) {
+	var result = path + ".out"
+
+	if strings.HasSuffix(path, ".uz2") {
+		result = strings.TrimSuffix(path, ".uz2")
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	out, err := os.Create(result)
+	if err != nil {
+		return "", err
+	}
+	defer out.Close()
+
+	r := uz2.NewReader(f)
+	_, err = io.Copy(out, r)
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
 }
