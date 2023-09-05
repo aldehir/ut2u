@@ -149,7 +149,7 @@ func (p *PackageManager) Exists(ctx context.Context, pkg PackageMeta) (bool, err
 }
 
 func (b *PackageManager) packageKey(pkg PackageMeta) string {
-	return filepath.Join(b.Prefix, pkg.Name, pkg.GUID+".uz2")
+	return filepath.Join(b.Prefix, pkg.Name+".uz2", pkg.GUID)
 }
 
 // Encode the package meta to a map for storing in S3
