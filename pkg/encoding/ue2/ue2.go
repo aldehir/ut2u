@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"unicode/utf16"
 )
 
 type Index int32
@@ -52,11 +53,8 @@ func (e *encoder) int16(v int16)   { e.uint16(uint16(v)) }
 func (e *encoder) int32(v int32)   { e.uint32(uint32(v)) }
 
 func (e *encoder) string(v string) {
-	if len(v) > 255 {
-		errorf("unsupported length string: %d", len(v))
-	}
+	e.ueIndex(Index(len(v) + 1))
 
-	e.uint8(uint8(len(v) + 1))
 	b := []byte(v)
 	b = append(b, 0x00)
 
@@ -194,7 +192,19 @@ func (d *decoder) int16() int16 { return int16(d.uint16()) }
 func (d *decoder) int32() int32 { return int32(d.uint32()) }
 
 func (d *decoder) string() string {
-	length := d.uint8()
+	length := d.ueIndex()
+
+	if length < 0 {
+		// Handle unicode strings
+		b := make([]uint16, -1*length)
+		err := binary.Read(d.r, binary.LittleEndian, b)
+		if err != nil {
+			error_(err)
+		}
+
+		runes := utf16.Decode(b)
+		return string(runes[:len(runes)-1])
+	}
 
 	b := make([]byte, length)
 	_, err := d.r.Read(b)
