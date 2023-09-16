@@ -1,5 +1,7 @@
 package upkg
 
+import "github.com/aldehir/ut2u/pkg/encoding/ue2"
+
 type header struct {
 	Magic        uint32
 	Version      uint16
@@ -19,16 +21,14 @@ type generation struct {
 	NameCount   uint32
 }
 
-type index = int
-
 type name struct {
 	Str   string
 	Flags uint32
 }
 
 type import_ struct {
-	ClassPackageIndex index
-	ClassNameIndex    index
+	ClassPackageIndex ue2.Index
+	ClassNameIndex    ue2.Index
 	Package           uint32
-	ObjectNameIndex   index
+	ObjectNameIndex   ue2.Index
 }

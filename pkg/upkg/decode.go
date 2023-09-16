@@ -1,8 +1,9 @@
 package upkg
 
 import (
-	"encoding/binary"
 	"io"
+
+	"github.com/aldehir/ut2u/pkg/encoding/ue2"
 )
 
 type Decoder struct {
@@ -35,7 +36,7 @@ func (d *Decoder) Decode() (*Package, error) {
 }
 
 func (d *Decoder) readHeader() (err error) {
-	err = binary.Read(d.r, binary.LittleEndian, &d.pkg.h)
+	err = ue2.Decode(d.r, &d.pkg.h)
 	if err != nil {
 		return
 	}
@@ -43,14 +44,14 @@ func (d *Decoder) readHeader() (err error) {
 	if d.pkg.h.Version >= 68 {
 		var genCount uint32
 
-		err = binary.Read(d.r, binary.LittleEndian, &genCount)
+		err = ue2.Decode(d.r, &genCount)
 		if err != nil {
 			return
 		}
 
 		var gen generation
 		for i := 0; i < int(genCount); i++ {
-			err = binary.Read(d.r, binary.LittleEndian, &gen)
+			err = ue2.Decode(d.r, &gen)
 			if err != nil {
 				return
 			}
@@ -63,28 +64,21 @@ func (d *Decoder) readHeader() (err error) {
 }
 
 func (d *Decoder) readNames() (err error) {
-	// Read names
 	_, err = d.r.Seek(int64(d.pkg.h.NameOffset), io.SeekStart)
 	if err != nil {
 		return
 	}
 
-	var str string
-	var flags uint32
+	var n name
 
 	d.pkg.names = make([]name, 0, d.pkg.h.NameCount)
 	for i := 0; i < int(d.pkg.h.NameCount); i++ {
-		str, err = d.decodeName()
+		err = ue2.Decode(d.r, &n)
 		if err != nil {
 			return
 		}
 
-		err = binary.Read(d.r, binary.LittleEndian, &flags)
-		if err != nil {
-			return
-		}
-
-		d.pkg.names = append(d.pkg.names, name{str, flags})
+		d.pkg.names = append(d.pkg.names, n)
 	}
 
 	return nil
@@ -100,22 +94,7 @@ func (d *Decoder) readImports() (err error) {
 
 	d.pkg.imports = make([]import_, 0, d.pkg.h.ImportCount)
 	for i := 0; i < int(d.pkg.h.ImportCount); i++ {
-		imp.ClassPackageIndex, err = d.decodeIndex()
-		if err != nil {
-			return
-		}
-
-		imp.ClassNameIndex, err = d.decodeIndex()
-		if err != nil {
-			return
-		}
-
-		err = binary.Read(d.r, binary.LittleEndian, &imp.Package)
-		if err != nil {
-			return
-		}
-
-		imp.ObjectNameIndex, err = d.decodeIndex()
+		err = ue2.Decode(d.r, &imp)
 		if err != nil {
 			return
 		}
@@ -124,71 +103,4 @@ func (d *Decoder) readImports() (err error) {
 	}
 
 	return nil
-}
-
-func (d *Decoder) decodeName() (name string, err error) {
-	var length uint8
-
-	err = binary.Read(d.r, binary.LittleEndian, &length)
-	if err != nil {
-		return
-	}
-
-	if length == 0 {
-		return "", nil
-	}
-
-	raw := make([]byte, length)
-	_, err = d.r.Read(raw)
-	if err != nil {
-		return
-	}
-
-	return string(raw[:len(raw)-1]), nil
-}
-
-// This doesn't look pretty, but it should be straightforward to follow
-func (d *Decoder) decodeIndex() (idx index, err error) {
-	sign := 1
-
-	var b uint8
-	err = binary.Read(d.r, binary.LittleEndian, &b)
-	if err != nil {
-		return
-	}
-
-	var value = int(b & 0x3f)
-
-	if b&0x80 != 0 {
-		sign = -1
-	}
-
-	if b&0x40 != 0 {
-		err = binary.Read(d.r, binary.LittleEndian, &b)
-		if err != nil {
-			return
-		}
-
-		value |= int(b&0x7f) << 6
-
-		if b&0x80 != 0 {
-			err = binary.Read(d.r, binary.LittleEndian, &b)
-			if err != nil {
-				return
-			}
-
-			value |= int(b&0x7f) << 13
-
-			if b&0x80 != 0 {
-				err = binary.Read(d.r, binary.LittleEndian, &b)
-				if err != nil {
-					return
-				}
-
-				value |= int(b&0x7f) << 20
-			}
-		}
-	}
-
-	return sign * value, nil
 }
