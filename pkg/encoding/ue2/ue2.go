@@ -53,6 +53,11 @@ func (e *encoder) int16(v int16)   { e.uint16(uint16(v)) }
 func (e *encoder) int32(v int32)   { e.uint32(uint32(v)) }
 
 func (e *encoder) string(v string) {
+	if len(v) == 0 {
+		e.ueIndex(Index(0))
+		return
+	}
+
 	e.ueIndex(Index(len(v) + 1))
 
 	b := []byte(v)
@@ -193,6 +198,10 @@ func (d *decoder) int32() int32 { return int32(d.uint32()) }
 
 func (d *decoder) string() string {
 	length := d.ueIndex()
+
+	if length == 0 {
+		return ""
+	}
 
 	if length < 0 {
 		// Handle unicode strings
