@@ -22,7 +22,7 @@ func Decode(r io.Reader, data any) (err error) {
 
 	d := &decoder{r: r}
 	d.value(v)
-	return nil
+	return
 }
 
 func Encode(w io.Writer, data any) (err error) {
@@ -31,7 +31,7 @@ func Encode(w io.Writer, data any) (err error) {
 	e := &encoder{w: w}
 	v := reflect.Indirect(reflect.ValueOf(data))
 	e.value(v)
-	return nil
+	return
 }
 
 type encoder struct {
