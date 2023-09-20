@@ -36,7 +36,8 @@ func (d *Decoder) Decode() (*Package, error) {
 }
 
 func (d *Decoder) readHeader() (err error) {
-	err = ue2.Decode(d.r, &d.pkg.h)
+	decoder := ue2.NewDecoder(d.r)
+	err = decoder.Decode(&d.pkg.h)
 	if err != nil {
 		return
 	}
@@ -44,14 +45,14 @@ func (d *Decoder) readHeader() (err error) {
 	if d.pkg.h.Version >= 68 {
 		var genCount uint32
 
-		err = ue2.Decode(d.r, &genCount)
+		err = decoder.Decode(&genCount)
 		if err != nil {
 			return
 		}
 
 		var gen generation
 		for i := 0; i < int(genCount); i++ {
-			err = ue2.Decode(d.r, &gen)
+			err = decoder.Decode(&gen)
 			if err != nil {
 				return
 			}
@@ -71,9 +72,11 @@ func (d *Decoder) readNames() (err error) {
 
 	var n name
 
+	decoder := ue2.NewDecoder(d.r)
+
 	d.pkg.names = make([]name, 0, d.pkg.h.NameCount)
 	for i := 0; i < int(d.pkg.h.NameCount); i++ {
-		err = ue2.Decode(d.r, &n)
+		err = decoder.Decode(&n)
 		if err != nil {
 			return
 		}
@@ -92,9 +95,11 @@ func (d *Decoder) readImports() (err error) {
 
 	var imp import_
 
+	decoder := ue2.NewDecoder(d.r)
+
 	d.pkg.imports = make([]import_, 0, d.pkg.h.ImportCount)
 	for i := 0; i < int(d.pkg.h.ImportCount); i++ {
-		err = ue2.Decode(d.r, &imp)
+		err = decoder.Decode(&imp)
 		if err != nil {
 			return
 		}

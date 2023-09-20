@@ -1,7 +1,6 @@
 package ue2
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -20,7 +19,7 @@ type TestStruct struct {
 	Name string
 }
 
-func TestDecode(t *testing.T) {
+func TestUnmarshal(t *testing.T) {
 	data := []byte{
 		0xf6, 0xff, 0xff, 0xff,
 		0x0a, 0x00, 0x00, 0x00,
@@ -33,10 +32,8 @@ func TestDecode(t *testing.T) {
 		0x05, 'T', 'E', 'S', 'T', 0x00,
 	}
 
-	buf := bytes.NewBuffer(data)
-
 	var got TestStruct
-	err := Decode(buf, &got)
+	err := Unmarshal(data, &got)
 	if err != nil {
 		t.Error(err)
 	}
@@ -58,7 +55,7 @@ func TestDecode(t *testing.T) {
 	}
 }
 
-func TestEncode(t *testing.T) {
+func TestMarshal(t *testing.T) {
 	obj := TestStruct{
 		A:    -10,
 		B:    10,
@@ -70,8 +67,6 @@ func TestEncode(t *testing.T) {
 		H:    -1,
 		Name: "TEST",
 	}
-
-	buf := new(bytes.Buffer)
 
 	want := []byte{
 		0xf6, 0xff, 0xff, 0xff,
@@ -85,12 +80,10 @@ func TestEncode(t *testing.T) {
 		0x05, 'T', 'E', 'S', 'T', 0x00,
 	}
 
-	err := Encode(buf, obj)
+	got, err := Marshal(obj)
 	if err != nil {
 		t.Error(err)
 	}
-
-	got := buf.Bytes()
 
 	if d := cmp.Diff(want, got); d != "" {
 		t.Errorf("TestEncode mismatch (-want,+got):\n%s", d)

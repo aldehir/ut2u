@@ -1,6 +1,7 @@
 package ue2
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -12,47 +13,61 @@ type Index int32
 
 var indexType = reflect.TypeOf(Index(0))
 
-func Decode(r io.Reader, data any) (err error) {
-	defer catchError(&err)
+func Unmarshal(data []byte, value any) error {
+	buf := bytes.NewBuffer(data)
+	decoder := NewDecoder(buf)
 
-	v := reflect.ValueOf(data)
-	if v.Kind() == reflect.Pointer {
-		v = v.Elem()
+	err := decoder.Decode(value)
+	if err != nil {
+		return err
 	}
 
-	d := &decoder{r: r}
-	d.value(v)
-	return
+	return nil
 }
 
-func Encode(w io.Writer, data any) (err error) {
-	defer catchError(&err)
+func Marshal(value any) ([]byte, error) {
+	var buf bytes.Buffer
+	e := NewEncoder(&buf)
+	err := e.Encode(value)
+	if err != nil {
+		return nil, err
+	}
 
-	e := &encoder{w: w}
-	v := reflect.Indirect(reflect.ValueOf(data))
+	result := make([]byte, buf.Len())
+	copy(result, buf.Bytes())
+	return result, nil
+}
+
+type Encoder struct {
+	w io.Writer
+}
+
+func NewEncoder(w io.Writer) *Encoder {
+	return &Encoder{w: w}
+}
+
+func (e *Encoder) Encode(value any) (err error) {
+	defer catchError(&err)
+	v := reflect.Indirect(reflect.ValueOf(value))
 	e.value(v)
 	return
 }
 
-type encoder struct {
-	w io.Writer
-}
-
-func (e *encoder) write(val any) {
+func (e *Encoder) write(val any) {
 	err := binary.Write(e.w, binary.LittleEndian, val)
 	if err != nil {
 		error_(err)
 	}
 }
 
-func (e *encoder) uint8(v uint8)   { e.write(v) }
-func (e *encoder) uint16(v uint16) { e.write(v) }
-func (e *encoder) uint32(v uint32) { e.write(v) }
-func (e *encoder) int8(v int8)     { e.uint8(uint8(v)) }
-func (e *encoder) int16(v int16)   { e.uint16(uint16(v)) }
-func (e *encoder) int32(v int32)   { e.uint32(uint32(v)) }
+func (e *Encoder) uint8(v uint8)   { e.write(v) }
+func (e *Encoder) uint16(v uint16) { e.write(v) }
+func (e *Encoder) uint32(v uint32) { e.write(v) }
+func (e *Encoder) int8(v int8)     { e.uint8(uint8(v)) }
+func (e *Encoder) int16(v int16)   { e.uint16(uint16(v)) }
+func (e *Encoder) int32(v int32)   { e.uint32(uint32(v)) }
 
-func (e *encoder) string(v string) {
+func (e *Encoder) string(v string) {
 	if len(v) == 0 {
 		e.ueIndex(Index(0))
 		return
@@ -69,7 +84,7 @@ func (e *encoder) string(v string) {
 	}
 }
 
-func (e *encoder) ueIndex(v Index) {
+func (e *Encoder) ueIndex(v Index) {
 	var negative bool
 
 	if v < 0 {
@@ -122,7 +137,7 @@ func (e *encoder) ueIndex(v Index) {
 	e.uint8(n4)
 }
 
-func (e *encoder) value(v reflect.Value) {
+func (e *Encoder) value(v reflect.Value) {
 	switch v.Kind() {
 	case reflect.Array:
 		l := v.Len()
@@ -163,40 +178,56 @@ func (e *encoder) value(v reflect.Value) {
 	}
 }
 
-type decoder struct {
+type Decoder struct {
 	r io.Reader
 }
 
-func (d *decoder) next(val any) {
+func NewDecoder(r io.Reader) *Decoder {
+	return &Decoder{r: r}
+}
+
+func (d *Decoder) Decode(val any) (err error) {
+	defer catchError(&err)
+
+	v := reflect.ValueOf(val)
+	if v.Kind() == reflect.Pointer {
+		v = v.Elem()
+	}
+
+	d.value(v)
+	return
+}
+
+func (d *Decoder) next(val any) {
 	err := binary.Read(d.r, binary.LittleEndian, val)
 	if err != nil {
 		error_(err)
 	}
 }
 
-func (d *decoder) uint8() uint8 {
+func (d *Decoder) uint8() uint8 {
 	var val uint8
 	d.next(&val)
 	return val
 }
 
-func (d *decoder) uint16() uint16 {
+func (d *Decoder) uint16() uint16 {
 	var val uint16
 	d.next(&val)
 	return val
 }
 
-func (d *decoder) uint32() uint32 {
+func (d *Decoder) uint32() uint32 {
 	var val uint32
 	d.next(&val)
 	return val
 }
 
-func (d *decoder) int8() int8   { return int8(d.uint8()) }
-func (d *decoder) int16() int16 { return int16(d.uint16()) }
-func (d *decoder) int32() int32 { return int32(d.uint32()) }
+func (d *Decoder) int8() int8   { return int8(d.uint8()) }
+func (d *Decoder) int16() int16 { return int16(d.uint16()) }
+func (d *Decoder) int32() int32 { return int32(d.uint32()) }
 
-func (d *decoder) string() string {
+func (d *Decoder) string() string {
 	length := d.ueIndex()
 
 	if length == 0 {
@@ -224,7 +255,7 @@ func (d *decoder) string() string {
 	return string(b[:len(b)-1])
 }
 
-func (d *decoder) ueIndex() int32 {
+func (d *Decoder) ueIndex() int32 {
 	sign := int32(1)
 
 	b := d.uint8()
@@ -252,7 +283,7 @@ func (d *decoder) ueIndex() int32 {
 	return sign * value
 }
 
-func (d *decoder) value(v reflect.Value) {
+func (d *Decoder) value(v reflect.Value) {
 	switch v.Kind() {
 	case reflect.Array:
 		l := v.Len()
