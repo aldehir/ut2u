@@ -18,7 +18,7 @@ func TestClientQuery(t *testing.T) {
 		t.Error(err)
 	}
 
-	details, err := client.Query(context.TODO(), addr)
+	details, err := client.Query(context.TODO(), addr, WithRules(), WithPlayers())
 	if err != nil {
 		t.Error(err)
 	}

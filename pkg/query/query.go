@@ -65,13 +65,29 @@ type queryResponse struct {
 	Payload []byte
 }
 
+type QueryOptions struct {
+	// Amount of time to wait for server responses before timing out. If set to
+	// low, it is possible to receive partial data as the server sends query
+	// responses in 450 byte chunks.
+	Timeout time.Duration
+	Command Command
+}
+
+type QueryOption func(*QueryOptions)
+
 type Command uint8
 
 const (
-	PingCommand            Command = 0
-	RulesCommmand          Command = 1
-	PlayersCommand         Command = 2
-	RulesAndPlayersCommand Command = 3
+	Ping Command = 1 << iota
+	Rules
+	Players
+)
+
+const (
+	pingCommand            = 0
+	rulesCommand           = 1
+	playersCommand         = 2
+	rulesAndPlayersCommand = 3
 )
 
 const Version = 128
@@ -98,13 +114,52 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) Query(ctx context.Context, addr net.Addr) (ServerDetails, error) {
+func WithPlayers() QueryOption {
+	return func(opts *QueryOptions) {
+		opts.Command |= Players
+	}
+}
+
+func WithRules() QueryOption {
+	return func(opts *QueryOptions) {
+		opts.Command |= Rules
+	}
+}
+
+func WithTimeout(timeout time.Duration) QueryOption {
+	return func(opts *QueryOptions) {
+		opts.Timeout = timeout
+	}
+}
+
+func (c *Client) Query(ctx context.Context, addr net.Addr, opts ...QueryOption) (ServerDetails, error) {
+	options := QueryOptions{
+		Timeout: 250 * time.Millisecond,
+		Command: Ping,
+	}
+
+	for _, o := range opts {
+		o(&options)
+	}
+
 	responses := make(chan queryResponse, 5)
 	c.notify(addr, responses)
-	c.sendCommand(addr, PingCommand)
-	c.sendCommand(addr, RulesAndPlayersCommand)
 
-	timer := time.NewTimer(250 * time.Millisecond)
+	if options.Command&Ping != 0 {
+		c.sendCommand(addr, pingCommand)
+	}
+
+	if options.Command&Rules != 0 && options.Command&Players != 0 {
+		c.sendCommand(addr, rulesAndPlayersCommand)
+	} else {
+		if options.Command&Rules != 0 {
+			c.sendCommand(addr, rulesCommand)
+		} else if options.Command&Players != 0 {
+			c.sendCommand(addr, playersCommand)
+		}
+	}
+
+	timer := time.NewTimer(options.Timeout)
 	var details ServerDetails
 	err := ErrNoResponse
 
@@ -137,9 +192,9 @@ loop:
 
 func enrichDetails(details *ServerDetails, resp queryResponse) error {
 	switch resp.Header.Command {
-	case PingCommand:
+	case pingCommand:
 		return ue2.Unmarshal(resp.Payload, &details.Info)
-	case RulesCommmand:
+	case rulesCommand:
 		var kv KeyValuePair
 
 		buf := bytes.NewBuffer(resp.Payload)
@@ -156,7 +211,7 @@ func enrichDetails(details *ServerDetails, resp queryResponse) error {
 
 			details.Rules = append(details.Rules, kv)
 		}
-	case PlayersCommand:
+	case playersCommand:
 		var player Player
 
 		buf := bytes.NewBuffer(resp.Payload)
