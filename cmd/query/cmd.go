@@ -20,7 +20,7 @@ var printCount int
 var timeout int
 
 var queryCommand = &cobra.Command{
-	Use:   "query server...",
+	Use:   "query [-t timeout] server [server...]",
 	Short: "Query a UT2004 server",
 	RunE:  doQuery,
 
