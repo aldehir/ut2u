@@ -33,9 +33,7 @@ func Marshal(value any) ([]byte, error) {
 		return nil, err
 	}
 
-	result := make([]byte, buf.Len())
-	copy(result, buf.Bytes())
-	return result, nil
+	return buf.Bytes(), nil
 }
 
 type Encoder struct {
