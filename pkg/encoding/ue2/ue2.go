@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
 	"unicode/utf16"
 )
 
@@ -34,6 +35,25 @@ func Marshal(value any) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func StripColors(s string) string {
+	var builder strings.Builder
+
+	byteString := []byte(s)
+
+	i := 0
+	for i < len(byteString) {
+		if byteString[i] == 0x1b {
+			i += 4
+			continue
+		}
+
+		builder.Write([]byte{byteString[i]})
+		i++
+	}
+
+	return builder.String()
 }
 
 type Encoder struct {

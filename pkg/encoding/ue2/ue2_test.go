@@ -89,3 +89,14 @@ func TestMarshal(t *testing.T) {
 		t.Errorf("TestEncode mismatch (-want,+got):\n%s", d)
 	}
 }
+
+func TestStripColors(t *testing.T) {
+	s := "\x1b\x00\x01\x02This is a string with \x1b\x00\x00\x00color."
+
+	want := "This is a string with color."
+	got := StripColors(s)
+
+	if want != got {
+		t.Errorf("want: %v, got: %v", []byte(want), []byte(got))
+	}
+}
