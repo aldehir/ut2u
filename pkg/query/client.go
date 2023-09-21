@@ -64,10 +64,8 @@ func QueryPing(ctx context.Context, addr string) (ServerResponseLine, error) {
 		return ServerResponseLine{}, err
 	}
 
-	buf := bytes.NewBuffer(resp.Payload)
-
 	var result ServerResponseLine
-	err = ue2.Decode(buf, &result)
+	err = ue2.Unmarshal(resp.Payload, &result)
 	if err != nil {
 		return ServerResponseLine{}, err
 	}
@@ -86,14 +84,14 @@ func QueryRules(ctx context.Context, addr string) (ServerRules, error) {
 		return ServerRules{}, err
 	}
 
-	var buf bytes.Buffer
-	buf.Write(resp.Payload)
-
 	var result ServerRules
 	var kv KeyValuePair
 
+	buf := bytes.NewBuffer(resp.Payload)
+	decoder := ue2.NewDecoder(buf)
+
 	for {
-		err = ue2.Decode(&buf, &kv)
+		err = decoder.Decode(&kv)
 		if err == io.EOF {
 			break
 		}
@@ -140,14 +138,12 @@ func dial(ctx context.Context, addr string) (*net.UDPConn, error) {
 }
 
 func sendCommand(conn *net.UDPConn, cmd Command) error {
-	var buf bytes.Buffer
-
-	err := ue2.Encode(&buf, QueryHeader{Version: Version, Command: cmd})
+	data, err := ue2.Marshal(QueryHeader{Version: Version, Command: cmd})
 	if err != nil {
 		return err
 	}
 
-	_, err = conn.Write(buf.Bytes())
+	_, err = conn.Write(data)
 	if err != nil {
 		return err
 	}
@@ -167,15 +163,14 @@ func nextPacket(ctx context.Context, conn *net.UDPConn) (QueryResponse, error) {
 	var resp QueryResponse
 
 	buf := bytes.NewBuffer(packet[:n])
+	decoder := ue2.NewDecoder(buf)
 
-	err = ue2.Decode(buf, &resp.Header)
+	err = decoder.Decode(&resp.Header)
 	if err != nil {
 		return QueryResponse{}, err
 	}
 
-	b := buf.Bytes()
-	resp.Payload = make([]byte, len(b))
-	copy(resp.Payload, b)
-
+	resp.Payload = make([]byte, buf.Len())
+	copy(resp.Payload, buf.Bytes())
 	return resp, nil
 }
