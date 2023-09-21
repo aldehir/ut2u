@@ -18,8 +18,8 @@ With `ut2u`, you can:
 
 ## Query
 
-`ut2u query` queries a given server. The server must be of the form ip:port and
-the port must be the game port, the query port is inferred.
+`ut2u query` queries a given server. The server must be of the form
+`ip:port`, with port being the game port.
 
 ```console
 $ ut2u query chi-1.staging.kokuei.dev:7777
@@ -104,9 +104,9 @@ Checksums:
 
 ### Check Dependencies
 
-`ut2u package check-deps` will scan your UT2004 folder and verify every
-package has it's dependencies met. It requires you pass in the path to your
-UT2004.ini file.
+`ut2u package check-deps` verifies every package in your UT2004
+installation has its dependencies met. It requires you pass in the
+path to your UT2004.ini file.
 
 ```console
 $ ut2u package check-deps /path/to/System/UT2004.ini
@@ -118,10 +118,9 @@ Some packages have missing dependencies
 
 ### Requires
 
-`ut2u package requires` will scan your UT2004 folder for packages that list
-the given package as a dependency. The package should not have an extension,
-as UT2004 itself does not differentiate by extension other than when
-searching for a package.
+`ut2u package requires` searches your UT2004 installation for packages that
+list the given package as a dependency. The package should not have an
+extension.
 
 ```console
 $ ut2u package requires /path/to/System/UT2004.ini DEBonusTextures
