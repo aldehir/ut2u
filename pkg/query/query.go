@@ -36,9 +36,9 @@ type ServerInfo struct {
 	IP             string
 	Port           int32
 	QueryPort      int32
-	ServerName     string
-	MapName        string
-	GameType       string
+	ServerName     ue2.ColorizedString
+	MapName        ue2.ColorizedString
+	GameType       ue2.ColorizedString
 	CurrentPlayers int32
 	MaxPlayers     int32
 	Ping           int32
@@ -48,12 +48,12 @@ type ServerInfo struct {
 
 type KeyValuePair struct {
 	Key   string
-	Value string
+	Value ue2.ColorizedString
 }
 
 type Player struct {
 	Num     int32
-	Name    string
+	Name    ue2.ColorizedString
 	Ping    int32
 	Score   int32
 	StatsID int32
