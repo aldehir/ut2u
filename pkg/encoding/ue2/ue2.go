@@ -21,6 +21,10 @@ type ColorizedString struct {
 	ColorPoints []ColorPoint
 }
 
+func (c ColorizedString) String() string {
+	return c.Value
+}
+
 type ColorPoint struct {
 	At    int
 	Color color.Color
