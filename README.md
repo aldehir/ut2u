@@ -5,10 +5,135 @@ tasks.
 
 With `ut2u`, you can:
 
+* Query servers.
+* Extract package information including: GUID, dependencies, and
+  checksums.
+* Compress/Decompress packages.
+* Search for dependents of a package.
 * Generate a manifest containing information for the UT2004 packages on your
   server.
 * Automatically compress your UT2004 packages and synchronize it to S3 object
   storage.
+
+
+## Query
+
+`ut2u query` queries a given server. The server must be of the form ip:port and
+the port must be the game port, the query port is inferred.
+
+```console
+$ ut2u query chi-1.staging.kokuei.dev:7777
+UTComp Duels [ut2.chi-1.staging.kokuei.dev/1]
+  Game: xDeathMatch
+  Map: DM-DE-Ironic-FE
+  Players: 0/2
+  Rules:
+    ServerMode: dedicated
+    AdminName: kokuei
+    AdminEmail: hello@kokuei.dev
+    ServerVersion: 3369
+    GameStats: False
+    MaxSpectators: 24
+    MapVoting: true
+    KickVoting: false
+    Mutator: MutAntiTCCFinal
+    Tick Rate: 58.97 / 60.00 max.
+    Mutator: iTSFake
+    Mutator: MutReplace
+    Mutator: MutUseLightning
+    Mutator: MutNoAdrenaline
+    Mutator: MutNoDoubleDamage
+    Mutator: MutNoSuperWeapon
+    Mutator: MutUTComp
+    UTComp Version: 1.8b-K4
+    Enhanced Netcode: True
+    Mutator: Tickrate
+    MinPlayers: 2
+    EndTimeDelay: 4.00
+    GoalScore: 0
+    TimeLimit: 15
+    Translocator: False
+    WeaponStay: False
+    ForceRespawn: True
+    mutator: DMMutator
+```
+
+You may pass in multiple servers and they will be queried simultaneously.
+
+
+## Packages
+
+`ut2u package` offers various commands related to UT2 packages.
+
+
+### Compression/Decompression
+
+`ut2u` supports package compression and decompress without the need for UCC.
+
+```console
+$ ut2u package compress DM-Test.ut2
+DM-Test.ut2 -> DM-Test.ut2.uz2
+```
+
+```console
+$ ut2u package decompress DM-Test.ut2.uz2
+DM-Test.ut2.uz2 -> DM-Test.ut2
+```
+
+
+### Info
+
+`ut2u package info` will return information about a package.
+
+```console
+$ ut2u package info DM-Test.ut2
+Name:     DM-Test.ut2
+GUID:     8BD57B014CEE4E6523AEF5BE1C6DCE89
+Provides: DM-Test
+Requires:
+  - 2K4Chargers
+  - Engine
+  - UT2004Weapons
+  - XGame
+Checksums:
+  MD5:    77329b17d456a165b5124a65ab88c209
+  SHA1:   097f76bdfafd43eda12803de67ff2a9197886921
+  SHA256: fd96be829e728c617808d953f57c41c67b5a5dbfdd7151a6d326b1e6da628c7b
+```
+
+
+### Check Dependencies
+
+`ut2u package check-deps` will scan your UT2004 folder and verify every
+package has it's dependencies met. It requires you pass in the path to your
+UT2004.ini file.
+
+```console
+$ ut2u package check-deps /path/to/System/UT2004.ini
+Package DanielsMeshes.usx has missing dependencies: Belt_fx
+Package VehicleMeshes.usx has missing dependencies: VehicleSkins
+Some packages have missing dependencies
+```
+
+
+### Requires
+
+`ut2u package requires` will scan your UT2004 folder for packages that list
+the given package as a dependency. The package should not have an extension,
+as UT2004 itself does not differentiate by extension other than when
+searching for a package.
+
+```console
+$ ut2u package requires /path/to/System/UT2004.ini DEBonusTextures
+BR-DE-ElecFields.ut2
+CTF-DE-ElecFields.ut2
+CTF-Grendelkeep.ut2
+DEBonusMeshes.usx
+DM-DE-Grendelkeep.ut2
+DM-DE-Ironic.ut2
+DM-DE-Osiris2.ut2
+ONS-Aridoom.ut2
+```
 
 
 ## Redirect
