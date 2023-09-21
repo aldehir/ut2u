@@ -1,6 +1,7 @@
 package ue2
 
 import (
+	"image/color"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -17,6 +18,10 @@ type TestStruct struct {
 	H Index
 
 	Name string
+}
+
+type TestColorizedString struct {
+	Text ColorizedString
 }
 
 func TestUnmarshal(t *testing.T) {
@@ -52,6 +57,26 @@ func TestUnmarshal(t *testing.T) {
 
 	if d := cmp.Diff(want, got); d != "" {
 		t.Errorf("TestDecode mismatch (-want,+got):\n%s", d)
+	}
+}
+
+func TestUnmarshalColorizedString(t *testing.T) {
+	var got ColorizedString
+	err := Unmarshal([]byte{15, 'T', 'E', 0x1b, 255, 0, 255, 'S', 'T', 0x1b, 0, 255, 0, 0xb0, 'F', 0}, &got)
+	if err != nil {
+		t.Error(err)
+	}
+
+	want := ColorizedString{
+		Value: "TEST\u00b0F",
+		ColorPoints: []ColorPoint{
+			{At: 2, Color: color.RGBA{255, 0, 255, 255}},
+			{At: 4, Color: color.RGBA{0, 255, 0, 255}},
+		},
+	}
+
+	if d := cmp.Diff(want, got); d != "" {
+		t.Errorf("TestUnmarshalColorizedString (-want,+got):\n%s", d)
 	}
 }
 

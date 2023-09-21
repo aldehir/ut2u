@@ -3,16 +3,33 @@ package ue2
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"image/color"
 	"io"
 	"reflect"
 	"strings"
 	"unicode/utf16"
+
+	"golang.org/x/text/encoding/charmap"
 )
 
 type Index int32
 
+type ColorizedString struct {
+	Value       string
+	ColorPoints []ColorPoint
+}
+
+type ColorPoint struct {
+	At    int
+	Color color.Color
+}
+
 var indexType = reflect.TypeOf(Index(0))
+var colorizedStringType = reflect.TypeOf(ColorizedString{})
+
+var ErrInvalidColor = errors.New("invalid color")
 
 func Unmarshal(data []byte, value any) error {
 	buf := bytes.NewBuffer(data)
@@ -54,6 +71,17 @@ func StripColors(s string) string {
 	}
 
 	return builder.String()
+}
+
+// ToUTF8 converts a UE2 String to UTF8. If it fails to decode, the original
+// string is returned.
+func ToUTF8(s string) string {
+	decoder := charmap.ISO8859_1.NewDecoder()
+	res, err := decoder.Bytes([]byte(s))
+	if err != nil {
+		return s
+	}
+	return string(res)
 }
 
 type Encoder struct {
@@ -273,6 +301,57 @@ func (d *Decoder) string() string {
 	return string(b[:len(b)-1])
 }
 
+func (d *Decoder) colorizedString() reflect.Value {
+	var result ColorizedString
+
+	length := d.ueIndex()
+	if length == 0 {
+		return reflect.ValueOf(result)
+	}
+
+	b := make([]byte, length)
+	_, err := d.r.Read(b)
+	if err != nil {
+		error_(err)
+	}
+
+	uncolored := make([]byte, 0, len(b))
+
+	i := 0
+	for i < len(b)-1 {
+		if b[i] == 0x1b {
+			if i+3 > len(b)-1 {
+				error_(ErrInvalidColor)
+			}
+
+			result.ColorPoints = append(result.ColorPoints, ColorPoint{
+				At: len(uncolored),
+				Color: color.RGBA{
+					R: b[i+1],
+					G: b[i+2],
+					B: b[i+3],
+					A: 255,
+				},
+			})
+
+			i += 4
+			continue
+		}
+
+		uncolored = append(uncolored, b[i])
+		i++
+	}
+
+	decoder := charmap.ISO8859_1.NewDecoder()
+	asUTF8, err := decoder.Bytes(uncolored)
+	if err != nil {
+		error_(err)
+	}
+
+	result.Value = string(asUTF8)
+	return reflect.ValueOf(result)
+}
+
 func (d *Decoder) ueIndex() int32 {
 	sign := int32(1)
 
@@ -310,13 +389,16 @@ func (d *Decoder) value(v reflect.Value) {
 		}
 
 	case reflect.Struct:
-		l := v.NumField()
-		for i := 0; i < l; i++ {
-			if v := v.Field(i); v.CanSet() {
-				d.value(v)
+		if v.Type() == colorizedStringType {
+			v.Set(d.colorizedString())
+		} else {
+			l := v.NumField()
+			for i := 0; i < l; i++ {
+				if v := v.Field(i); v.CanSet() {
+					d.value(v)
+				}
 			}
 		}
-
 	case reflect.Slice:
 		l := v.Len()
 		for i := 0; i < l; i++ {
