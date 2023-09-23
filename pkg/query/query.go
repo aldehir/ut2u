@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net"
@@ -229,7 +228,7 @@ func enrichDetails(details *ServerDetails, resp queryResponse) error {
 			details.Players = append(details.Players, player)
 		}
 	default:
-		return fmt.Errorf("%w: %d", ErrInvalidCommand, resp.Header.Command)
+		log.Printf("received invalid command: %d", resp.Header.Command)
 	}
 
 	return nil
@@ -291,6 +290,8 @@ func (c *Client) stop(addr net.Addr, ch chan<- queryResponse) {
 			channels = channels[:len(channels)-1]
 		}
 	}
+
+	c.notifyList[addr.String()] = channels
 }
 
 func (c *Client) dispatch(addr net.Addr, header Header, payload []byte) {
