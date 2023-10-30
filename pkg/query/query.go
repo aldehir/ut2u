@@ -46,7 +46,7 @@ type ServerInfo struct {
 }
 
 type KeyValuePair struct {
-	Key   string
+	Key   ue2.ColorizedString
 	Value ue2.ColorizedString
 }
 
