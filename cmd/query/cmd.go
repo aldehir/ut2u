@@ -6,7 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"sync"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -14,13 +14,13 @@ import (
 	"github.com/aldehir/ut2u/pkg/query"
 )
 
-var printMutex sync.Mutex
-var printCount int
-
 var timeout int
 
+var formatterName string
+var formatter Formatter
+
 var queryCommand = &cobra.Command{
-	Use:   "query [-t timeout] server [server...]",
+	Use:   "query [-t timeout] [-f plain|json] server [server...]",
 	Short: "Query a UT2004 server",
 	RunE:  doQuery,
 
@@ -33,13 +33,24 @@ func EnrichCommand(cmd *cobra.Command) {
 
 func init() {
 	queryCommand.Flags().IntVarP(&timeout, "timeout", "t", 250, "timeout in milliseconds")
+	queryCommand.Flags().StringVarP(&formatterName, "format", "f", "plain", "format (plain, json)")
 }
 
 func doQuery(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 
+	if strings.EqualFold(formatterName, "json") {
+		formatter = &JSONFormatter{}
+	} else {
+		formatter = &ConsoleFormatter{}
+	}
+
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt)
+	defer func() {
+		signal.Stop(sigs)
+		close(sigs)
+	}()
 
 	go func() {
 		_, ok := <-sigs
@@ -54,18 +65,28 @@ func doQuery(cmd *cobra.Command, args []string) error {
 	}
 	defer client.Close()
 
-	var wg sync.WaitGroup
+	reports := make(chan Server, 10)
+	defer close(reports)
 
+	count := 0
 	for _, server := range args {
-		wg.Add(1)
+		count += 1
+
 		go func(server string) {
-			defer wg.Done()
+			var rpt Server
+			rpt.Address = server
 
 			addr, err := net.ResolveUDPAddr("udp", server)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Could not resolve %s: %v\n", server, err)
+				rpt.Status.Success = false
+				rpt.Status.Message = err.Error()
+				reports <- rpt
 				return
 			}
+
+			rpt.IP = addr.IP.String()
+			rpt.Port = addr.Port
+			rpt.QueryPort = addr.Port + 1
 
 			// Use query port
 			addr.Port = addr.Port + 1
@@ -78,45 +99,36 @@ func doQuery(cmd *cobra.Command, args []string) error {
 
 			details, err := client.Query(ctx, addr, opts...)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Failed to query %s: %v\n", addr.String(), err)
+				rpt.Status.Success = false
+				rpt.Status.Message = fmt.Sprintf("Failed to query %s: %v\n", addr.String(), err)
+				reports <- rpt
 				return
 			}
 
-			printDetails(details)
+			rpt.Status.Success = true
+			rpt.Status.Message = "success"
+
+			rpt.Info = CreateServerInfo(details.Info)
+			rpt.Rules = CreateRules(details.Rules)
+			rpt.Players, rpt.Teams = CreatePlayersAndTeams(details.Players, int(details.Info.CurrentPlayers))
+
+			reports <- rpt
 		}(server)
 	}
 
-	wg.Wait()
+	for i := 0; i < count; i++ {
+		rpt := <-reports
 
-	signal.Stop(sigs)
-	close(sigs)
-
-	return nil
-}
-
-func printDetails(details query.ServerDetails) {
-	printMutex.Lock()
-	defer printMutex.Unlock()
-
-	if printCount > 0 {
-		fmt.Println()
-	}
-
-	fmt.Printf("%s\n", details.Info.ServerName)
-	fmt.Printf("  Game: %s\n", details.Info.GameType)
-	fmt.Printf("  Map: %s\n", details.Info.MapName)
-	fmt.Printf("  Players: %d/%d\n", details.Info.CurrentPlayers, details.Info.MaxPlayers)
-
-	for _, p := range details.Players {
-		fmt.Printf("    %s: score=%d ping=%d\n", p.Name.Value, p.Score, p.Ping)
-	}
-
-	if len(details.Rules) > 0 {
-		fmt.Println("  Rules:")
-		for _, rule := range details.Rules {
-			fmt.Printf("    %s: %s\n", rule.Key, rule.Value)
+		err = formatter.Report(rpt)
+		if err != nil {
+			return err
 		}
 	}
 
-	printCount++
+	err = formatter.Flush()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
