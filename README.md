@@ -61,6 +61,11 @@ UTComp Duels [ut2.chi-1.staging.kokuei.dev/1]
 You may pass in multiple servers and they will be queried simultaneously.
 
 
+### JSON Output
+
+To produce JSON output, pass in `-f json`. [JSON query example](doc/query-example.json).
+
+
 ## Packages
 
 `ut2u package` offers various commands related to UT2 packages.

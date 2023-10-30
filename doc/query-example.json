@@ -1,0 +1,325 @@
+{
+  "servers": [
+    {
+      "address": "104.238.165.51:7777",
+      "ip": "104.238.165.51",
+      "port": 7777,
+      "query_port": 7778,
+      "info": {
+        "name": "-[Unreal Fight Club]- PUG/Tourney Server (f2 Chicago)",
+        "name_colors": [],
+        "map": "DM-UCMP3-Sympathy",
+        "map_colors": [
+          {
+            "index": 0,
+            "color": {
+              "red": 248,
+              "green": 64,
+              "blue": 64,
+              "hex": "#f84040"
+            }
+          }
+        ],
+        "gametype": "xDeathMatch",
+        "gametype_colors": [],
+        "player_count": {
+          "current": 0,
+          "max": 8
+        },
+        "skill_level": "0"
+      },
+      "rules": [
+        {
+          "key": "ServerMode",
+          "key_colors": [],
+          "value": "dedicated",
+          "value_colors": []
+        },
+        {
+          "key": "AdminName",
+          "key_colors": [],
+          "value": "",
+          "value_colors": []
+        },
+        {
+          "key": "AdminEmail",
+          "key_colors": [],
+          "value": "",
+          "value_colors": []
+        },
+        {
+          "key": "ServerVersion",
+          "key_colors": [],
+          "value": "3369",
+          "value_colors": []
+        },
+        {
+          "key": "GameStats",
+          "key_colors": [],
+          "value": "True",
+          "value_colors": []
+        },
+        {
+          "key": "MaxSpectators",
+          "key_colors": [],
+          "value": "24",
+          "value_colors": []
+        },
+        {
+          "key": "MapVoting",
+          "key_colors": [],
+          "value": "true",
+          "value_colors": []
+        },
+        {
+          "key": "KickVoting",
+          "key_colors": [],
+          "value": "false",
+          "value_colors": []
+        },
+        {
+          "key": "Mutator",
+          "key_colors": [],
+          "value": "iTSFake",
+          "value_colors": []
+        },
+        {
+          "key": "Mutator",
+          "key_colors": [],
+          "value": "WtfTools",
+          "value_colors": []
+        },
+        {
+          "key": "Wtf Tools",
+          "key_colors": [],
+          "value": "v1",
+          "value_colors": []
+        },
+        {
+          "key": "Mutator",
+          "key_colors": [],
+          "value": "Screen Sender Final",
+          "value_colors": []
+        },
+        {
+          "key": "Mutator",
+          "key_colors": [],
+          "value": "MutNoAdrenaline",
+          "value_colors": []
+        },
+        {
+          "key": "Mutator",
+          "key_colors": [],
+          "value": "Clan Manager 1h 7T",
+          "value_colors": []
+        },
+        {
+          "key": "Mutator",
+          "key_colors": [],
+          "value": "MutClanManager",
+          "value_colors": []
+        },
+        {
+          "key": "Mutator",
+          "key_colors": [],
+          "value": "MutWeaponConfig",
+          "value_colors": []
+        },
+        {
+          "key": "3SPN Weapon Config",
+          "key_colors": [],
+          "value": "1.1",
+          "value_colors": []
+        },
+        {
+          "key": "Mutator",
+          "key_colors": [],
+          "value": "MutOLGameStats",
+          "value_colors": []
+        },
+        {
+          "key": "MinPlayers",
+          "key_colors": [],
+          "value": "2",
+          "value_colors": []
+        },
+        {
+          "key": "EndTimeDelay",
+          "key_colors": [],
+          "value": "4.00",
+          "value_colors": []
+        },
+        {
+          "key": "GoalScore",
+          "key_colors": [],
+          "value": "10",
+          "value_colors": []
+        },
+        {
+          "key": "TimeLimit",
+          "key_colors": [],
+          "value": "0",
+          "value_colors": []
+        },
+        {
+          "key": "Translocator",
+          "key_colors": [],
+          "value": "False",
+          "value_colors": []
+        },
+        {
+          "key": "WeaponStay",
+          "key_colors": [],
+          "value": "True",
+          "value_colors": []
+        },
+        {
+          "key": "ForceRespawn",
+          "key_colors": [],
+          "value": "True",
+          "value_colors": []
+        },
+        {
+          "key": "BalanceTeams",
+          "key_colors": [],
+          "value": "False",
+          "value_colors": []
+        },
+        {
+          "key": "PlayersBalanceTeams",
+          "key_colors": [],
+          "value": "False",
+          "value_colors": []
+        },
+        {
+          "key": "FriendlyFireScale",
+          "key_colors": [],
+          "value": "50%",
+          "value_colors": []
+        },
+        {
+          "key": "3SPN Version",
+          "key_colors": [],
+          "value": "UFC 3.3",
+          "value_colors": []
+        },
+        {
+          "key": "Team Combos",
+          "key_colors": [],
+          "value": "False",
+          "value_colors": []
+        },
+        {
+          "key": "Challenge Mode",
+          "key_colors": [],
+          "value": "False",
+          "value_colors": []
+        },
+        {
+          "key": "Pickup Mode",
+          "key_colors": [],
+          "value": "Optimal",
+          "value_colors": []
+        },
+        {
+          "key": "mutator",
+          "key_colors": [],
+          "value": "TAM_Mutator",
+          "value_colors": []
+        },
+        {
+          "key": "mutator",
+          "key_colors": [],
+          "value": "MutScreenSender",
+          "value_colors": []
+        }
+      ],
+      "players": [
+        {
+          "index": 17,
+          "team": -1,
+          "spectator": true,
+          "name": "zkokuei",
+          "name_colors": [
+            {
+              "index": 0,
+              "color": {
+                "red": 1,
+                "green": 1,
+                "blue": 1,
+                "hex": "#010101"
+              }
+            },
+            {
+              "index": 1,
+              "color": {
+                "red": 250,
+                "green": 1,
+                "blue": 1,
+                "hex": "#fa0101"
+              }
+            },
+            {
+              "index": 2,
+              "color": {
+                "red": 1,
+                "green": 250,
+                "blue": 1,
+                "hex": "#01fa01"
+              }
+            },
+            {
+              "index": 3,
+              "color": {
+                "red": 1,
+                "green": 1,
+                "blue": 250,
+                "hex": "#0101fa"
+              }
+            },
+            {
+              "index": 4,
+              "color": {
+                "red": 128,
+                "green": 128,
+                "blue": 128,
+                "hex": "#808080"
+              }
+            },
+            {
+              "index": 5,
+              "color": {
+                "red": 250,
+                "green": 250,
+                "blue": 250,
+                "hex": "#fafafa"
+              }
+            }
+          ],
+          "ping": 24,
+          "score": 0,
+          "stats_id": 0
+        }
+      ],
+      "teams": [
+        {
+          "index": 0,
+          "name": "Red",
+          "name_colors": [],
+          "score": 0
+        },
+        {
+          "index": 1,
+          "name": "Blue",
+          "name_colors": [],
+          "score": 0
+        }
+      ],
+      "status": {
+        "success": true,
+        "msg": "success"
+      }
+    }
+  ]
+}
+
